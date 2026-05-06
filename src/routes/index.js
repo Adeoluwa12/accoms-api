@@ -79,6 +79,7 @@ router.patch('/units/:id', unitCtrl.updateUnit);
 router.patch('/units/:id/toggle', unitCtrl.toggleUnit);
 router.post('/units/:id/leader', unitCtrl.setLeader);
 router.post('/units/:id/reserved-assign', unitCtrl.reservedAssign);
+router.delete('/units/:id', unitCtrl.deleteUnit);
 
 // ── DASHBOARD (separate endpoints per section) ───────────────────────────────
 router.get('/dashboard/active-event', dashCtrl.getActiveEvent);

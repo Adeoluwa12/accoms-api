@@ -124,6 +124,30 @@ exports.updateUnit = async (req, res) => {
   }
 };
 
+// DELETE /units/:id — permanently delete a unit
+exports.deleteUnit = async (req, res) => {
+  try {
+    const unit = await Unit.findById(req.params.id);
+    if (!unit) {
+      return res.status(404).json({ success: false, message: 'Unit not found' });
+    }
+
+    // Optionally, check for occupants before deleting and prevent deletion if occupied
+    const occupantCount = await Attendee.countDocuments({ accommodationId: unit._id });
+    if (occupantCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot delete a unit that still has occupants.',
+      });
+    }
+
+    await Unit.deleteOne({ _id: req.params.id });
+    res.json({ success: true, message: 'Unit deleted successfully.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // POST /units/:id/leader — set or clear room leader
 exports.setLeader = async (req, res) => {
   try {
