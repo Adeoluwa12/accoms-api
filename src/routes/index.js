@@ -63,6 +63,7 @@ router.delete('/events/:id', eventCtrl.deleteEvent);
 // ── ATTENDEES ────────────────────────────────────────────────────────────────
 router.post('/attendees', attendeeCtrl.createAttendee);
 router.post('/attendees/import', attendeeCtrl.importAttendees);
+router.post('/attendees/import-workers', attendeeCtrl.importWorkers);
 router.get('/attendees/fellowships', attendeeCtrl.getFellowships);
 router.get('/attendees', attendeeCtrl.getAttendees);
 router.patch('/attendees/:id', attendeeCtrl.updateAttendee);

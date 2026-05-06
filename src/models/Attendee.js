@@ -49,6 +49,8 @@ const attendeeSchema = new mongoose.Schema(
     phone:   { type: String, trim: true, default: '' },
     email:   { type: String, trim: true, default: '', lowercase: true },
     address: { type: String, trim: true, default: '' },
+    isWorker: { type: Boolean, default: false },
+    workerRole: { type: String, trim: true, default: '' },
 
     present: { type: Boolean, default: false },
     assigned: { type: Boolean, default: false },

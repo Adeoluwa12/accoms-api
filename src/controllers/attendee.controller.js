@@ -7,10 +7,34 @@ function normFellowship(body) {
   return (body.fellowship || body.churchCenter || '').trim();
 }
 
+function parseBoolean(value, fallback = false) {
+  if (value === undefined || value === null || value === '') return fallback;
+  if (typeof value === 'boolean') return value;
+  const normalized = String(value).trim().toLowerCase();
+  return ['true', '1', 'yes', 'y'].includes(normalized);
+}
+
+function normWorkerRole(value) {
+  return (value || '').trim();
+}
+
+function resolveWorkerFields(row, forceWorker = false) {
+  const roleRaw = row.workerRole ?? row.worker_role ?? '';
+  if (forceWorker) {
+    return { isWorker: true, workerRole: normWorkerRole(roleRaw) };
+  }
+
+  const isWorkerRaw = row.isWorker ?? row.is_worker;
+  return {
+    isWorker: parseBoolean(isWorkerRaw, false),
+    workerRole: normWorkerRole(roleRaw),
+  };
+}
+
 // POST /attendees
 exports.createAttendee = async (req, res) => {
   try {
-    const { eventId, firstName, surname, gender, phone, email, address, badgeMode } = req.body;
+    const { eventId, firstName, surname, gender, phone, email, address, badgeMode, isWorker, workerRole } = req.body;
     const attendee = await Attendee.create({
       eventId, firstName, surname, gender,
       fellowship: normFellowship(req.body),
@@ -18,6 +42,8 @@ exports.createAttendee = async (req, res) => {
       email:   email   || '',
       address: address || '',
       badgeMode: badgeMode || 'digital',
+      isWorker: parseBoolean(isWorker, false),
+      workerRole: normWorkerRole(workerRole),
     });
     res.status(201).json({ success: true, data: attendee });
   } catch (err) {
@@ -26,7 +52,7 @@ exports.createAttendee = async (req, res) => {
 };
 
 // POST /attendees/import  (JSON array — parsed from CSV on the frontend)
-exports.importAttendees = async (req, res) => {
+async function importAttendeeRows(req, res, { forceWorker = false } = {}) {
   try {
     const { eventId, attendees } = req.body;
     if (!Array.isArray(attendees) || attendees.length === 0) {
@@ -45,6 +71,7 @@ exports.importAttendees = async (req, res) => {
         errors.push(`Row ${rowNum}: gender must be Male or Female (got: "${row.gender}")`);
       }
       if (errors.length === 0) {
+        const { isWorker, workerRole } = resolveWorkerFields(row, forceWorker);
         valid.push({
           eventId,
           firstName:  row.firstName.trim(),
@@ -55,6 +82,8 @@ exports.importAttendees = async (req, res) => {
           email:      (row.email   || '').trim().toLowerCase(),
           address:    (row.address || '').trim(),
           badgeMode:  row.badgeMode || 'digital',
+          isWorker,
+          workerRole,
         });
       }
     });
@@ -68,6 +97,15 @@ exports.importAttendees = async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
+}
+
+exports.importAttendees = async (req, res) => {
+  return importAttendeeRows(req, res, { forceWorker: false });
+};
+
+// POST /attendees/import-workers
+exports.importWorkers = async (req, res) => {
+  return importAttendeeRows(req, res, { forceWorker: true });
 };
 
 // GET /attendees/fellowships?eventId=  — distinct fellowship values
@@ -137,6 +175,12 @@ exports.updateAttendee = async (req, res) => {
 
     if (req.body.fellowship !== undefined || req.body.churchCenter !== undefined) {
       updates.fellowship = normFellowship(req.body);
+    }
+    if (req.body.isWorker !== undefined) {
+      updates.isWorker = parseBoolean(req.body.isWorker, false);
+    }
+    if (req.body.workerRole !== undefined) {
+      updates.workerRole = normWorkerRole(req.body.workerRole);
     }
 
     const attendee = await Attendee.findByIdAndUpdate(req.params.id, updates, { new: true })
