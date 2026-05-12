@@ -17,6 +17,8 @@ exports.getStats = async (req, res) => {
       activeUnits,
       activeRooms,
       activeDorms,
+      workersTotal,
+      workersPresent,
     ] = await Promise.all([
       Attendee.countDocuments({ eventId }),
       Attendee.countDocuments({ eventId, present: true }),
@@ -26,6 +28,8 @@ exports.getStats = async (req, res) => {
       Unit.countDocuments({ eventId, isActive: true }),
       Unit.countDocuments({ eventId, isActive: true, type: 'Room' }),
       Unit.countDocuments({ eventId, isActive: true, type: 'Dorm' }),
+      Attendee.countDocuments({ eventId, isWorker: true }),
+      Attendee.countDocuments({ eventId, isWorker: true, present: true }),
     ]);
 
     res.json({
@@ -40,6 +44,9 @@ exports.getStats = async (req, res) => {
         activeUnits,
         activeRooms,
         activeDorms,
+        workersTotal,
+        workersPresent,
+        workersPresentPercent: workersTotal > 0 ? Math.round((workersPresent / workersTotal) * 100) : 0,
       },
     });
   } catch (err) {

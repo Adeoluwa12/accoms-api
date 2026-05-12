@@ -10,24 +10,27 @@ exports.getAttendanceSheet = async (req, res) => {
     const filter = { eventId };
     if (gender)           filter.gender  = gender;
     if (present !== undefined) filter.present = present === 'true';
+    if (isWorker !== undefined) filter.isWorker = isWorker === 'true';
 
     const attendees = await Attendee.find(filter)
       .populate('accommodationId', 'name type')
       .sort({ surname: 1, firstName: 1 });
 
-    const data = attendees.map((a, i) => ({
-      no:         i + 1,
-      surname:    a.surname,
-      firstName:  a.firstName,
-      gender:     a.gender,
-      fellowship: a.fellowship || '',   // unified field — no more churchCenter
-      phone:      a.phone      || '',
-      email:      a.email      || '',
-      address:    a.address    || '',
-      present:    a.present,
-      assigned:   a.assigned,
-      unit: a.accommodationId ? `${a.accommodationId.name} (${a.accommodationId.type})` : null,
-    }));
+      const data = attendees.map((a, i) => ({
+        no:         i + 1,
+        surname:    a.surname,
+        firstName:  a.firstName,
+        gender:     a.gender,
+        fellowship: a.fellowship || '',
+        phone:      a.phone      || '',
+        email:      a.email      || '',
+        address:    a.address    || '',
+        isWorker:   a.isWorker   || false,
+        workerRole: a.workerRole || '',
+        present:    a.present,
+        assigned:   a.assigned,
+        unit: a.accommodationId ? `${a.accommodationId.name} (${a.accommodationId.type})` : null,
+      }));
 
     res.json({ success: true, count: data.length, data });
   } catch (err) {

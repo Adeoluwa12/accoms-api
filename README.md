@@ -61,6 +61,7 @@ All responses follow this shape:
 |---|---|---|
 | `POST` | `/attendees` | Add single attendee |
 | `POST` | `/attendees/import` | Bulk import (JSON array) |
+| `POST` | `/attendees/import-workers` | Bulk import workers (forces `isWorker: true`) |
 | `GET` | `/attendees` | List with filters + pagination |
 | `POST` | `/attendees/:id/checkin` | Check in + auto-assign room |
 | `POST` | `/attendees/:id/undo` | Undo check-in (releases slot) |
@@ -76,6 +77,8 @@ All responses follow this shape:
   "gender": "Male",
   "churchCenter": "Ibadan",
   "fellowship": "Agbo",
+  "isWorker": false,
+  "workerRole": "Usher",
   "badgeMode": "digital"
 }
 ```
@@ -93,10 +96,29 @@ All responses follow this shape:
 {
   "eventId": "...",
   "attendees": [
-    { "firstName": "Tolu", "surname": "Bello", "gender": "Female", "churchCenter": "Lagos", "fellowship": "Song" }
+    {
+      "firstName": "Tolu",
+      "surname": "Bello",
+      "gender": "Female",
+      "churchCenter": "Lagos",
+      "fellowship": "Song",
+      "isWorker": true,
+      "workerRole": "Technical"
+    }
   ]
 }
 ```
+
+`POST /attendees/import-workers` body:
+```json
+{
+  "eventId": "...",
+  "attendees": [
+    { "firstName": "Ife", "surname": "Akin", "gender": "Female", "workerRole": "Welfare" }
+  ]
+}
+```
+This endpoint is the same as `/attendees/import`, but it forces `isWorker: true` for every imported row (so `isWorker` / `is_worker` column is not required in a workers CSV).
 
 **POST /attendees/:id/assign body:**
 ```json
