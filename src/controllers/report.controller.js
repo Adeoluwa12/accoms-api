@@ -4,7 +4,7 @@ const Unit     = require('../models/Unit');
 // GET /reports/attendance?eventId=&gender=&present=
 exports.getAttendanceSheet = async (req, res) => {
   try {
-    const { eventId, gender, present } = req.query;
+    const { eventId, gender, present, isWorker } = req.query;
     if (!eventId) return res.status(400).json({ success: false, message: 'eventId is required' });
 
     const filter = { eventId };
